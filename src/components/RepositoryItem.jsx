@@ -2,6 +2,7 @@ import React from "react";
 import { View, Image, StyleSheet } from "react-native";
 import Text from "./Text";
 import theme from "../theme";
+import * as Linking from "expo-linking";
 
 const styles = StyleSheet.create({
   container: {
@@ -27,6 +28,16 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     borderRadius: 4,
   },
+  githubBtn: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: 4,
+    marginTop: 15,
+    padding: 10,
+  },
+  githubText: {
+    alignSelf: "center",
+    color: "white",
+  },
   mainFooter: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -34,66 +45,112 @@ const styles = StyleSheet.create({
 });
 
 const mutateNumber = (number) => {
-  const suffix = 'k';
+  const suffix = "k";
   try {
     const num = Number(number);
     if (num < 1000) {
       return num;
     } else {
       const newNum = number / 1000;
-      return (Math.round(newNum * 10) / 10) + suffix;
+      return Math.round(newNum * 10) / 10 + suffix;
     }
   } catch (e) {
-    console.log(number, ' is not a number.', e.message);
+    console.log(number, " is not a number.", e.message);
   }
 };
 
-const RepositoryItem = ({ item }) => (
-  <View style={styles.container}>
-    <View style={styles.wrapper}>
-      <View style={styles.mainHeader}>
-        <Image
-          style={styles.tinyLogo}
-          source={{ uri: item.ownerAvatarUrl }}
-        ></Image>
-        <View style={styles.headerText}>
-          <Text color="textPrimary" fontWeight="bold" fontSize="subheading">
-            {item.fullName}
-          </Text>
-          <Text color="textSecondary">{item.description}</Text>
-          <View style={styles.language}>
-            <Text style={{ color: "white", margin: 3 }}>{item.language}</Text>
+const RepositoryItem = ({ item, singleRepo }) => {
+  const handlePress = (repo) => {
+    Linking.openURL(repo);
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.wrapper}>
+        <View style={styles.mainHeader}>
+          <Image
+            style={styles.tinyLogo}
+            source={{ uri: item.ownerAvatarUrl }}
+          ></Image>
+          <View style={styles.headerText}>
+            <Text
+              color="textPrimary"
+              fontWeight="bold"
+              fontSize="subheading"
+              testID="fullName"
+            >
+              {item.fullName}
+            </Text>
+            <Text color="textSecondary" testID="description">
+              {item.description}
+            </Text>
+            <View style={styles.language}>
+              <Text style={{ color: "white", margin: 3 }} testID="language">
+                {item.language}
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
-      <View style={styles.mainFooter}>
-        <View>
-          <Text color="textPrimary" fontWeight="bold" fontSize="subheading">
-            {mutateNumber(item.stargazersCount)}
-          </Text>
-          <Text color="textSecondary">Stars</Text>
+        <View style={styles.mainFooter}>
+          <View>
+            <Text
+              color="textPrimary"
+              fontWeight="bold"
+              fontSize="subheading"
+              testID="stargazersCount"
+            >
+              {mutateNumber(item.stargazersCount)}
+            </Text>
+            <Text color="textSecondary">Stars</Text>
+          </View>
+          <View>
+            <Text
+              color="textPrimary"
+              fontWeight="bold"
+              fontSize="subheading"
+              testID="forksCount"
+            >
+              {mutateNumber(item.forksCount)}
+            </Text>
+            <Text color="textSecondary">Forks</Text>
+          </View>
+          <View>
+            <Text
+              color="textPrimary"
+              fontWeight="bold"
+              fontSize="subheading"
+              testID="reviewCount"
+            >
+              {mutateNumber(item.reviewCount)}
+            </Text>
+            <Text color="textSecondary">Reviews</Text>
+          </View>
+          <View>
+            <Text
+              color="textPrimary"
+              fontWeight="bold"
+              fontSize="subheading"
+              testID="ratingAverage"
+            >
+              {item.ratingAverage}
+            </Text>
+            <Text color="textSecondary">Rating</Text>
+          </View>
         </View>
-        <View>
-          <Text color="textPrimary" fontWeight="bold" fontSize="subheading">
-            {mutateNumber(item.forksCount)}
-          </Text>
-          <Text color="textSecondary">Forks</Text>
-        </View>
-        <View>
-          <Text color="textPrimary" fontWeight="bold" fontSize="subheading">
-            {mutateNumber(item.reviewCount)}
-          </Text>
-          <Text color="textSecondary">Reviews</Text>
-        </View>
-        <View>
-          <Text color="textPrimary" fontWeight="bold" fontSize="subheading">
-            {mutateNumber(item.ratingAverage)}
-          </Text>
-          <Text color="textSecondary">Rating</Text>
-        </View>
+        {singleRepo ? (
+          <View style={styles.githubBtn}>
+            <Text
+              fontWeight="bold"
+              style={styles.githubText}
+              onPress={() => handlePress(item.url)}
+            >
+              Open in GitHub
+            </Text>
+          </View>
+        ) : null}
       </View>
     </View>
-  </View>
-);
+  );
+};
 
 export default RepositoryItem;

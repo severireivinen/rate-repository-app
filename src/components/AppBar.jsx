@@ -34,8 +34,6 @@ const AppBar = () => {
     }
   }
 
-  //console.log("User: ", user);
-
   const signOut = () => {
     authStorage.removeAccessToken();
     client.resetStore();
@@ -47,6 +45,15 @@ const AppBar = () => {
         <Link to="/">
           <AppBarTab content={"Repositories"} />
         </Link>
+        {user ? (
+          <Link to="/review">
+            <AppBarTab content={"Create a review"} />
+          </Link>
+        ) : (
+          <Link to="/signup">
+            <AppBarTab content={"Sign up"} />
+          </Link>
+        )}
         {!user ? (
           <Link to="/signin">
             <AppBarTab content={"Sign in"} />
