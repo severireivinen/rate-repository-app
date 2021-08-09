@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { FlatList, View, StyleSheet, Pressable } from "react-native";
 import RepositoryItem from "./RepositoryItem";
 import useRepositories from "../hooks/useRepositories";
-import Text from "./Text";
 import { useHistory } from "react-router-native";
+import { Picker } from "@react-native-picker/picker";
+import { Searchbar } from "react-native-paper";
+import { useDebounce } from "use-debounce";
 
 const styles = StyleSheet.create({
   separator: {
@@ -13,52 +15,95 @@ const styles = StyleSheet.create({
 
 const ItemSeparator = () => <View style={styles.separator} />;
 
-export const RepositoryListContainer = ({
-  repositories,
-  loading,
-  error,
-  handlePress,
-}) => {
-  // Get the nodes from the edges array
-  const repositoryNodes = repositories
-    ? repositories.edges.map((edge) => edge.node)
-    : [];
+export class RepositoryListContainer extends React.Component {
+  renderHeader = () => {
+    // this.props contains the component's props
+    const { order, setOrder, searchQuery, setSearchQuery } = this.props;
 
-  const renderItem = ({ item }) => (
-    <Pressable onPress={() => handlePress(item)}>
-      <RepositoryItem item={item} singleRepo={false} />
-    </Pressable>
-  );
+    return (
+      <ListHeader
+        order={order}
+        setOrder={setOrder}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+      />
+    );
+  };
 
-  if (loading) {
-    return <Text>Loading...</Text>;
+  render() {
+    const { repositories, handlePress } = this.props;
+
+    const repositoryNodes = repositories
+      ? repositories.edges.map((edge) => edge.node)
+      : [];
+
+    const renderItem = ({ item }) => (
+      <Pressable onPress={() => handlePress(item)}>
+        <RepositoryItem item={item} singleRepo={false} />
+      </Pressable>
+    );
+
+    return (
+      <FlatList
+        data={repositoryNodes}
+        ItemSeparatorComponent={ItemSeparator}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={this.renderHeader} // Order component
+      />
+    );
   }
+}
 
-  if (error) {
-    return <Text>Something went wrong!</Text>;
-  }
-
+// Picker bug which resets selectedValue to first item. Could not find a fix for this. Selection working otherwise.
+const ListHeader = ({ order, setOrder, searchQuery, setSearchQuery }) => {
   return (
-    <FlatList
-      data={repositoryNodes}
-      ItemSeparatorComponent={ItemSeparator}
-      renderItem={renderItem}
-      keyExtractor={(item) => item.id}
-    />
+    <View>
+      <Searchbar
+        placeholder="Search..."
+        onChangeText={(query) => setSearchQuery(query)}
+        value={searchQuery}
+      />
+      <Picker
+        selectedValue={order}
+        onValueChange={(itemValue) => setOrder(itemValue)}
+      >
+        <Picker.Item
+          label="Latest repositories"
+          value={{ type: "CREATED_AT", direction: "DESC" }}
+        />
+        <Picker.Item
+          label="Highest rated repositories"
+          value={{ type: "RATING_AVERAGE", direction: "DESC" }}
+        />
+        <Picker.Item
+          label="Lowest rated repositories"
+          value={{ type: "RATING_AVERAGE", direction: "ASC" }}
+        />
+      </Picker>
+    </View>
   );
 };
 
 const RepositoryList = () => {
-  const { repositories, loading, error } = useRepositories();
   const history = useHistory();
-
+  const [order, setOrder] = useState({ type: "CREATED_AT", direction: "DESC" });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debounceSearchQuery] = useDebounce(searchQuery, 500);
+  const { repositories } = useRepositories(
+    order.type,
+    order.direction,
+    debounceSearchQuery
+  );
 
   return (
     <RepositoryListContainer
       repositories={repositories}
-      loading={loading}
-      error={error}
       handlePress={(item) => history.push(`/repo/${item.id}`)}
+      order={order}
+      setOrder={setOrder}
+      searchQuery={searchQuery}
+      setSearchQuery={setSearchQuery}
     />
   );
 };
