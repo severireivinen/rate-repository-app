@@ -4,6 +4,7 @@ import { Route, Switch, Redirect } from "react-router-native";
 
 import AppBar from "./AppBar";
 import CreateReview from "./CreateReview";
+import MyReviews from "./MyReviews";
 import RepositoryList from "./RepositoryList";
 import SignIn from "./SignIn";
 import SignUp from "./SignUp";
@@ -27,6 +28,9 @@ const Main = () => {
         </Route>
         <Route path="/signup" exact>
           <SignUp />
+        </Route>
+        <Route path="/myreviews" exact>
+          <MyReviews />
         </Route>
         <Route path="/review" exact>
           <CreateReview />

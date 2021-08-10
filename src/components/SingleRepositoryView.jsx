@@ -23,7 +23,7 @@ const styles = StyleSheet.create({
   textContainer: {
     marginTop: 5,
     marginBottom: 5,
-    width: 340
+    width: 340,
   },
   reviewNumberContainer: {
     width: 40,
@@ -55,7 +55,9 @@ const ReviewItem = ({ review }) => (
     <View style={styles.reviewContainer}>
       <View style={styles.userContainer}>
         <Text fontWeight="bold">{review.user.username}</Text>
-        <Text color="textSecondary">{format(parseISO(review.createdAt), "dd.MM.yyyy")}</Text>
+        <Text color="textSecondary">
+          {format(parseISO(review.createdAt), "dd.MM.yyyy")}
+        </Text>
       </View>
       <View style={styles.textContainer}>
         <Text>{review.text}</Text>
@@ -64,16 +66,10 @@ const ReviewItem = ({ review }) => (
   </View>
 );
 
-const SingleRepositoryView = () => {
-  const { id } = useParams();
-  const { repository, error, loading } = useRepository(id);
-
+const SingleRepositoryViewContainer = ({ repository, onEndReach }) => {
   const reviews = repository
     ? repository.reviews.edges.map((edge) => edge.node)
     : [];
-
-  if (loading) return <Text>Loading...</Text>;
-  if (error) return <Text>Something went wrong!</Text>;
 
   return (
     <FlatList
@@ -82,6 +78,29 @@ const SingleRepositoryView = () => {
       renderItem={({ item }) => <ReviewItem review={item} />}
       keyExtractor={({ id }) => id}
       ListHeaderComponent={() => <RepositoryInfo repository={repository} />}
+      onEndReached={onEndReach}
+      onEndReachedThreshold={0.5}
+    />
+  );
+};
+
+const SingleRepositoryView = () => {
+  const { id } = useParams();
+  const { repository, fetchMore } = useRepository({
+    first: 8,
+    id,
+  });
+
+  const onEndReach = () => {
+    fetchMore();
+  };
+
+  if (!repository) return <Text>Loading...</Text>;
+
+  return (
+    <SingleRepositoryViewContainer
+      repository={repository}
+      onEndReach={onEndReach}
     />
   );
 };

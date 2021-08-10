@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FlatList, View, StyleSheet, Pressable } from "react-native";
+import Text from "./Text";
 import RepositoryItem from "./RepositoryItem";
 import useRepositories from "../hooks/useRepositories";
 import { useHistory } from "react-router-native";
@@ -31,7 +32,7 @@ export class RepositoryListContainer extends React.Component {
   };
 
   render() {
-    const { repositories, handlePress } = this.props;
+    const { repositories, handlePress, onEndReach } = this.props;
 
     const repositoryNodes = repositories
       ? repositories.edges.map((edge) => edge.node)
@@ -50,6 +51,8 @@ export class RepositoryListContainer extends React.Component {
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={this.renderHeader} // Order component
+        onEndReached={onEndReach}
+        onEndReachedThreshold={0.5}
       />
     );
   }
@@ -90,11 +93,19 @@ const RepositoryList = () => {
   const [order, setOrder] = useState({ type: "CREATED_AT", direction: "DESC" });
   const [searchQuery, setSearchQuery] = useState("");
   const [debounceSearchQuery] = useDebounce(searchQuery, 500);
-  const { repositories } = useRepositories(
-    order.type,
-    order.direction,
-    debounceSearchQuery
-  );
+
+  const { repositories, fetchMore } = useRepositories({
+    first: 8,
+    orderBy: order.type,
+    orderDirection: order.direction,
+    searchKeyword: debounceSearchQuery,
+  });
+
+  const onEndReach = () => {
+    fetchMore();
+  };
+
+  if (!repositories) return <Text>Loading...</Text>;
 
   return (
     <RepositoryListContainer
@@ -104,6 +115,7 @@ const RepositoryList = () => {
       setOrder={setOrder}
       searchQuery={searchQuery}
       setSearchQuery={setSearchQuery}
+      onEndReach={onEndReach}
     />
   );
 };

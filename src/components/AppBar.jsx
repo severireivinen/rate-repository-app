@@ -4,35 +4,23 @@ import Constants from "expo-constants";
 import AppBarTab from "./AppBarTab";
 import { Link } from "react-router-native";
 import useAuthStorage from "../hooks/useAuthStorage";
-import { useApolloClient, useQuery } from "@apollo/client";
-import { IS_AUTHORIZED } from "../graphql/queries";
+import { useApolloClient } from "@apollo/client";
+import useAuthorizedUser from "../hooks/useAuthorizedUser";
 
 const styles = StyleSheet.create({
   container: {
     paddingTop: Constants.statusBarHeight,
     backgroundColor: "#24292e",
   },
-  // ...
+  containerItems: {
+    flexDirection: "row",
+  },
 });
 
 const AppBar = () => {
   const authStorage = useAuthStorage();
   const client = useApolloClient();
-  const token = authStorage.getAccessToken();
-
-  let user = null;
-
-  if (token) {
-    const { data } = useQuery(IS_AUTHORIZED, {
-      fetchPolicy: "cache-and-network",
-    });
-
-    if (data) {
-      data.authorizedUser !== null
-        ? (user = data.authorizedUser)
-        : (user = null);
-    }
-  }
+  const { authorizedUser } = useAuthorizedUser();
 
   const signOut = () => {
     authStorage.removeAccessToken();
@@ -45,25 +33,29 @@ const AppBar = () => {
         <Link to="/">
           <AppBarTab content={"Repositories"} />
         </Link>
-        {user ? (
-          <Link to="/review">
-            <AppBarTab content={"Create a review"} />
-          </Link>
+        {authorizedUser ? (
+          <View style={styles.containerItems}>
+            <Link to="/review">
+              <AppBarTab content={"Create a review"} />
+            </Link>
+            <Link to="/myreviews">
+              <AppBarTab content={"My Reviews"} />
+            </Link>
+            <Link to="/">
+              <Pressable onPress={signOut}>
+                <AppBarTab content={"Sign out"} />
+              </Pressable>
+            </Link>
+          </View>
         ) : (
-          <Link to="/signup">
-            <AppBarTab content={"Sign up"} />
-          </Link>
-        )}
-        {!user ? (
-          <Link to="/signin">
-            <AppBarTab content={"Sign in"} />
-          </Link>
-        ) : (
-          <Link to="/">
-            <Pressable onPress={signOut}>
-              <AppBarTab content={"Sign out"} />
-            </Pressable>
-          </Link>
+          <View style={styles.containerItems}>
+            <Link to="/signup">
+              <AppBarTab content={"Sign up"} />
+            </Link>
+            <Link to="/signin">
+              <AppBarTab content={"Sign in"} />
+            </Link>
+          </View>
         )}
       </ScrollView>
     </View>
